@@ -8,7 +8,6 @@ install_github("kosukeimai/emIRT")
 names <- mepsEP6[,1]
 legData <- matrix(mepsEP6[,2],length(mepsEP6[,2]),1)
 colnames(legData) <- "EPG"
-matrix_df <- as.data.frame(votesEP6)
 rc2 <- rollcall(votesEP6, yea = 1 , nay = 2 , missing = 3,notInLegis = 0,legis.names=names,legis.data = legData,desc="EP6")
 result<-wnominate(rc2,polarity=c(10,10))
 summary(result) 
@@ -20,7 +19,7 @@ legislators <- data.frame(
 ggplot(legislators, aes(x = coord1D, y = coord2D, color = EPG, label = EPG)) +
   geom_point(size = 3) +
   geom_text(vjust = 1.5, hjust = 1.5, check_overlap = TRUE) +
-  labs(title = "Legislators on Cartesian Plane",
+  labs(title = "W Nominate centered around MEP 10",
        x = "Coordinate 1D",
        y = "Coordinate 2D") +
   theme_minimal() +
@@ -158,3 +157,39 @@ resultEMcentered <- binIRT(.rc = rcEM,
                            .priors = p,
                            .anchor_subject = 10
 )
+resulti <- wnominate(rc2)
+for (i in 1:5) {
+  resulti <- wnominate(rc2, polarity = c(10, 10))
+  
+  # Summary of result (optional, you can remove it if not needed)
+  print(summary(result))
+  
+  legislatorsi <- data.frame(
+    EPG = resulti$legislators$EPG,
+    coord1D = resulti$legislators$coord1D,
+    coord2D = resulti$legislators$coord2D,
+    correctYea = resulti$legislators$correctYea,
+    wrongYea = resulti$legislators$wrongNay,
+    correctNay = resulti$legislators$correctNay,
+    wrongNay = resulti$legislators$wrongNay,
+    GMP = resulti$legislators$GMP,
+    CC = resulti$legislators$CC,
+  )
+  
+  # Plotting the results
+  p <- ggplot(legislatorsi, aes(x = coord1D, y = coord2D, color = EPG, label = EPG)) +
+    geom_point(size = 3) +
+    geom_text(vjust = 1.5, hjust = 1.5, check_overlap = TRUE) +
+    labs(title = paste("W Nominate 2D - Iteration", i),
+         x = "Coordinate 1D",
+         y = "Coordinate 2D") +
+    theme_minimal() +
+    scale_color_discrete(name = "EPG Labels")
+  
+  # Save the plot
+  ggsave(filename = here("Results", paste("W_Nominate_Plot_Iteration", i, ".png", sep = "")), plot = p)
+  
+  
+  # Save the CSV
+  write.csv(legislatorsi, file = here("Results", paste("EP6_1D_Ideal_points_WNOMINATE_Iteration", i, ".csv", sep = "")), row.names = FALSE)
+}
